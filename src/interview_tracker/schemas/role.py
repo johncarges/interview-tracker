@@ -22,6 +22,7 @@ class RoleRead(BaseModel):
     salary_max: int | None
     status: str
     notes: str | None
+    application_status: str | None = None  # None means not yet applied
 
 
 class RoleUpdate(BaseModel):
