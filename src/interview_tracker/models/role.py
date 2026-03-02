@@ -3,9 +3,12 @@ from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Field, Relationship, SQLModel
 
+from interview_tracker.models.technology import RoleTechnology
+
 if TYPE_CHECKING:
     from interview_tracker.models.application import Application
     from interview_tracker.models.company import Company
+    from interview_tracker.models.technology import Technology
 
 
 class Role(SQLModel, table=True):
@@ -23,3 +26,6 @@ class Role(SQLModel, table=True):
 
     company: Optional["Company"] = Relationship(back_populates="roles")
     applications: list["Application"] = Relationship(back_populates="role")
+    technologies: list["Technology"] = Relationship(
+        back_populates="roles", link_model=RoleTechnology
+    )

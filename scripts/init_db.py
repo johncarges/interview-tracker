@@ -16,6 +16,7 @@ from interview_tracker.models.company import Company  # noqa: F401
 from interview_tracker.models.contact import Contact  # noqa: F401
 from interview_tracker.models.interview import Interview  # noqa: F401
 from interview_tracker.models.role import Role  # noqa: F401
+from interview_tracker.models.technology import RoleTechnology, Technology  # noqa: F401
 
 console = Console()
 
