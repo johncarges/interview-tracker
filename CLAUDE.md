@@ -3,8 +3,8 @@
 ## What This App Does
 
 Local-first interview tracking. Data lives in a SQLite file at `data/interview_tracker.db`.
-You interact by running scripts from the `scripts/` directory — no server required.
-Claude acts as the UI: interpret natural language → run the right script → display results.
+The primary interface is natural language — describe what you want, and either run a convenience
+script or write a short ad-hoc Python snippet using the service/repository layer directly.
 
 ---
 
@@ -18,35 +18,56 @@ uv run python scripts/init_db.py
 
 ---
 
-## Natural Language → Script Mapping
+## Two Ways to Interact
 
-| What the user says | Script to run |
-|---|---|
-| "Add a company: Acme Corp" | `scripts/add_company.py "Acme Corp"` |
-| "Add a contact at Stripe" | `scripts/add_contact.py` |
-| "Add a Staff Eng role at Google" | `scripts/add_role.py` |
-| "I applied to the Stripe role" | `scripts/add_application.py` |
-| "Schedule a phone screen for my Stripe app" | `scripts/add_interview.py` |
-| "Update Stripe app status to interviewing" | `scripts/update_application.py` |
-| "I passed the Stripe phone screen" | `scripts/complete_interview.py` |
-| "What interviews do I have coming up?" | `scripts/upcoming_interviews.py` |
-| "Who do I need to follow up with?" | `scripts/followup_contacts.py` |
-| "What's the status of my Stripe application?" | `scripts/application_status.py` |
-| "Give me my pipeline summary" | `scripts/pipeline_summary.py` |
+### 1. Convenience scripts — for mutations and common queries
+
+Use pre-built scripts for operations with side effects (validation, status changes) and
+for the most frequent read operations.
+
+```bash
+uv run python scripts/add_company.py "Stripe" --industry fintech
+uv run python scripts/pipeline_summary.py
+uv run python scripts/upcoming_interviews.py --days 7
+```
+
+### 2. Ad-hoc Python — for flexible, one-off queries
+
+For anything not covered by a script, write a short Python snippet directly. The service
+and repository layers are the real API — use them freely.
+
+```python
+import sys; sys.path.insert(0, "src")
+from interview_tracker.database.session import get_session
+from interview_tracker.repositories.company import CompanyRepository
+from interview_tracker.repositories.role import RoleRepository
+from interview_tracker.repositories.application import ApplicationRepository
+
+with get_session() as session:
+    companies = CompanyRepository(session).list_all()
+    edtech = [c for c in companies if c.industry == "edtech"]
+    for company in edtech:
+        roles = RoleRepository(session).list_by_company(company.id)
+        unapplied = [r for r in roles if not ApplicationRepository(session).list_by_role(r.id)]
+        for role in unapplied:
+            print(f"{company.name} — {role.title}")
+```
+
+If a query pattern comes up repeatedly, it's a candidate to become a new convenience script.
 
 ---
 
-## Script Reference
+## Convenience Script Reference
 
 ### Mutations
 | Script | Key args |
 |---|---|
 | `init_db.py` | none |
-| `add_company.py` | `NAME [--website] [--industry] [--notes]` |
-| `add_contact.py` | `NAME --company-id INT [--title] [--email] [--phone] [--linkedin] [--notes]` |
-| `add_role.py` | `TITLE --company-id INT [--url] [--salary-min] [--salary-max] [--notes]` |
-| `add_application.py` | `--role-id INT [--notes]` |
-| `add_interview.py` | `--application-id INT --type TYPE --scheduled-at DATETIME [--contact-id INT] [--notes]` |
+| `add_company.py` | `NAME [--website] [--industry] [--status] [--notes]` |
+| `add_contact.py` | `NAME --company TEXT [--title] [--email] [--phone] [--linkedin] [--notes]` |
+| `add_role.py` | `TITLE --company TEXT [--url] [--salary-min] [--salary-max] [--notes]` |
+| `add_application.py` | `[--role-id INT] [--company TEXT] [--role TEXT] [--notes]` |
+| `add_interview.py` | `--application-id INT --type TYPE --scheduled-at DATETIME [--contact-id INT]` |
 | `update_application.py` | `--application-id INT --status STATUS` |
 | `complete_interview.py` | `--interview-id INT --outcome OUTCOME [--notes]` |
 
@@ -77,40 +98,30 @@ All scripts support `--json` for structured output.
 ## Architecture
 
 ```
-.env → config.py (Settings) → database/engine.py → database/session.py
-  → repositories/ (DB queries) → services/ (business logic) → scripts/ (CLI entry points)
+.env → config.py → database/engine.py → database/session.py
+  → repositories/ (DB queries)
+    → services/ (business logic)
+      → scripts/ (convenience CLI entry points)
+         ↕
+      ad-hoc Python (flexible queries)
 ```
 
 | Layer | Location | Purpose |
 |---|---|---|
-| Config | `src/interview_tracker/config.py` | Reads env vars |
-| Engine | `src/interview_tracker/database/engine.py` | SQLAlchemy engine |
-| Session | `src/interview_tracker/database/session.py` | `get_session()` context manager |
 | Models | `src/interview_tracker/models/` | SQLModel table definitions |
 | Schemas | `src/interview_tracker/schemas/` | Pydantic I/O models |
 | Repos | `src/interview_tracker/repositories/` | All DB queries |
 | Services | `src/interview_tracker/services/` | Business logic |
-| Scripts | `scripts/` | CLI entry points |
+| Scripts | `scripts/` | Convenience CLI entry points |
 
 ---
 
 ## Changing the Database
 
-Set `DATABASE_URL` in `.env`. The value flows through `config.py` → `engine.py` → everywhere.
+Set `DATABASE_URL` in `.env`. Nothing else changes.
 
 - SQLite (default): `sqlite:///data/interview_tracker.db`
 - Postgres: `postgresql+psycopg2://user:pass@host/dbname`
-
-Nothing else changes.
-
----
-
-## Adding FastAPI Later
-
-1. Add `api` extra: `uv sync --extra api`
-2. Create `src/interview_tracker/api/` with route files
-3. Replace `with get_session() as session:` in scripts with `Depends(get_session)` in routes
-4. Schema layer (`schemas/`) is already the API contract — use as `response_model=`
 
 ---
 
