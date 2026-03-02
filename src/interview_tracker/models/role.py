@@ -20,6 +20,8 @@ class Role(SQLModel, table=True):
     salary_min: int | None = None
     salary_max: int | None = None
     status: str = Field(default="open")  # open, closed, filled
+    office_days_per_week: int | None = None  # 0=remote, 1-4=hybrid, 5=onsite
+    min_experience_years: int | None = None
     notes: str | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

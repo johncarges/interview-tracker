@@ -26,6 +26,8 @@ def main(
     url: str = typer.Option(None, help="Job listing URL"),
     salary_min: int = typer.Option(None, help="Minimum salary"),
     salary_max: int = typer.Option(None, help="Maximum salary"),
+    office_days: int = typer.Option(None, help="Days in office per week (0=remote, 5=onsite)"),
+    min_experience: int = typer.Option(None, help="Minimum years of experience"),
     notes: str = typer.Option(None, help="Free-form notes"),
     as_json: bool = typer.Option(False, "--json", help="Output as JSON"),
 ) -> None:
@@ -42,6 +44,8 @@ def main(
                 url=url,
                 salary_min=salary_min,
                 salary_max=salary_max,
+                office_days_per_week=office_days,
+                min_experience_years=min_experience,
                 notes=notes,
             )
         )
@@ -60,6 +64,10 @@ def main(
         lo = f"${role.salary_min:,}" if role.salary_min else "?"
         hi = f"${role.salary_max:,}" if role.salary_max else "?"
         table.add_row("[bold]Salary[/bold]", f"{lo} – {hi}")
+    if role.work_arrangement:
+        table.add_row("[bold]Arrangement[/bold]", role.work_arrangement)
+    if role.min_experience_years is not None:
+        table.add_row("[bold]Min Experience[/bold]", f"{role.min_experience_years} yrs")
 
     console.print("\n[bold green]✓ Role added[/bold green]")
     console.print(table)
