@@ -1,5 +1,6 @@
 from sqlmodel import create_engine
 
+import interview_tracker.models  # noqa: F401 — ensures all models are registered with SQLAlchemy
 from interview_tracker.config import settings
 
 connect_args = {}

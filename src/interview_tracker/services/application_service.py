@@ -6,6 +6,7 @@ from interview_tracker.repositories.role import RoleRepository
 from interview_tracker.schemas.application import (
     ApplicationCreate,
     ApplicationRead,
+    ApplicationReadFull,
     ApplicationUpdate,
 )
 
@@ -65,3 +66,27 @@ class ApplicationService:
             applications = self.repo.list_active()
 
         return [ApplicationRead.model_validate(a, from_attributes=True) for a in applications]
+
+    def _to_full(self, application_id: int) -> ApplicationReadFull | None:
+        app = self.repo.get_by_id(application_id)
+        if not app:
+            return None
+        role = self.role_repo.get_by_id(app.role_id)
+        company = self.company_repo.get_by_id(role.company_id) if role else None  # type: ignore[arg-type]
+        return ApplicationReadFull(
+            id=app.id,  # type: ignore[arg-type]
+            role_id=app.role_id,
+            status=app.status,
+            applied_at=app.applied_at,
+            notes=app.notes,
+            role_title=role.title if role else "Unknown",
+            company_name=company.name if company else "Unknown",
+        )
+
+    def get_application_status_full(
+        self,
+        company_name: str | None = None,
+        role_title: str | None = None,
+    ) -> list[ApplicationReadFull]:
+        base = self.get_application_status(company_name=company_name, role_title=role_title)
+        return [full for a in base if (full := self._to_full(a.id)) is not None]

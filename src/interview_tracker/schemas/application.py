@@ -16,6 +16,16 @@ class ApplicationRead(BaseModel):
     notes: str | None
 
 
+class ApplicationReadFull(BaseModel):
+    id: int
+    role_id: int
+    status: str
+    applied_at: datetime
+    notes: str | None
+    role_title: str
+    company_name: str
+
+
 class ApplicationUpdate(BaseModel):
     status: str | None = None
     notes: str | None = None

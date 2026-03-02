@@ -34,7 +34,7 @@ def main(
 ) -> None:
     with get_session() as session:
         try:
-            applications = ApplicationService(session).get_application_status(
+            applications = ApplicationService(session).get_application_status_full(
                 company_name=company, role_title=role
             )
         except ValueError as e:
@@ -51,7 +51,8 @@ def main(
 
     table = Table(title="Application Status")
     table.add_column("ID", style="dim")
-    table.add_column("Role ID", style="dim")
+    table.add_column("Company")
+    table.add_column("Role")
     table.add_column("Status")
     table.add_column("Applied", style="dim")
 
@@ -59,7 +60,8 @@ def main(
         color = STATUS_COLORS.get(a.status, "white")
         table.add_row(
             str(a.id),
-            str(a.role_id),
+            a.company_name,
+            a.role_title,
             f"[{color}]{a.status}[/{color}]",
             a.applied_at.strftime("%Y-%m-%d"),
         )
