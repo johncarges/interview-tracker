@@ -22,6 +22,22 @@ class ContactService:
         contacts = self.repo.list_by_company(company_id)
         return [ContactRead.model_validate(c, from_attributes=True) for c in contacts]
 
+    def associate_with_company(self, contact_id: int, company_id: int) -> None:
+        self.repo.add_to_company(contact_id, company_id)
+
+    def disassociate_from_company(self, contact_id: int, company_id: int) -> None:
+        self.repo.remove_from_company(contact_id, company_id)
+
+    def associate_with_role(self, contact_id: int, role_id: int) -> None:
+        self.repo.add_to_role(contact_id, role_id)
+
+    def disassociate_from_role(self, contact_id: int, role_id: int) -> None:
+        self.repo.remove_from_role(contact_id, role_id)
+
+    def list_by_role(self, role_id: int) -> list[ContactRead]:
+        contacts = self.repo.list_by_role(role_id)
+        return [ContactRead.model_validate(c, from_attributes=True) for c in contacts]
+
     def contacts_needing_followup(self, days: int = 14) -> list[ContactRead]:
         contacts = self.repo.list_needing_followup(days)
         return [ContactRead.model_validate(c, from_attributes=True) for c in contacts]

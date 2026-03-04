@@ -65,7 +65,7 @@ If a query pattern comes up repeatedly, it's a candidate to become a new conveni
 | `init_db.py` | none |
 | `add_company.py` | `NAME [--website] [--industry] [--status] [--notes]` |
 | `add_contact.py` | `NAME --company TEXT [--title] [--email] [--phone] [--linkedin] [--notes]` |
-| `add_role.py` | `TITLE --company TEXT [--url] [--salary-min] [--salary-max] [--notes]` |
+| `add_role.py` | `TITLE --company TEXT [--website] [--industry] [--url] [--description] [--salary-min] [--salary-max] [--office-days] [--notes] [--apply]` |
 | `add_application.py` | `[--role-id INT] [--company TEXT] [--role TEXT] [--notes]` |
 | `add_interview.py` | `--application-id INT --type TYPE --scheduled-at DATETIME [--contact-id INT]` |
 | `update_application.py` | `--application-id INT --status STATUS` |
@@ -113,6 +113,25 @@ All scripts support `--json` for structured output.
 | Repos | `src/interview_tracker/repositories/` | All DB queries |
 | Services | `src/interview_tracker/services/` | Business logic |
 | Scripts | `scripts/` | Convenience CLI entry points |
+
+---
+
+## Resume Tailoring
+
+**Master resume**: `resumes/Carges_resume_master.tex`
+**Tailored copies**: `resumes/Carges_{Company}_{RoleSlug}_Resume.tex` (gitignored)
+**Original source**: `/Users/johncarges/Desktop/Life/01_Work/job_hunt/job_hunt_2026/resume/Carges_resume.tex`
+
+The master has a `\iffullstack` toggle — comment out `\fullstacktrue` for backend focus, uncomment for full-stack.
+
+### Workflow when adding a new application
+1. Fetch the job posting URL
+2. Run `add_role.py ... --description "..." --apply` (pass full posting text as description)
+3. Read the master resume + posting, decide toggle based on role signals:
+   - Frontend mentions (React, TypeScript, UI) → full-stack
+   - Pure backend/infra (Kubernetes, distributed systems, payments) → backend
+4. Write a tailored copy to `resumes/` with the toggle set and any technology reordering
+5. Note which variant was used in the role's notes if non-obvious
 
 ---
 

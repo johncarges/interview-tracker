@@ -22,7 +22,8 @@ console = Console()
 @app.command()
 def main(
     name: str = typer.Argument(..., help="Contact name"),
-    company: str = typer.Option(..., help="Company name"),
+    company: str = typer.Option(None, help="Company name to associate with"),
+    role_id: int = typer.Option(None, "--role-id", help="Role ID to associate with"),
     title: str = typer.Option(None, help="Job title"),
     email: str = typer.Option(None, help="Email address"),
     phone: str = typer.Option(None, help="Phone number"),
@@ -31,14 +32,16 @@ def main(
     as_json: bool = typer.Option(False, "--json", help="Output as JSON"),
 ) -> None:
     with get_session() as session:
-        company_record = CompanyService(session).get_company_by_name(company)
-        if not company_record:
-            console.print(f"[red]Error:[/red] Company '{company}' not found")
-            raise typer.Exit(1)
+        company_record = None
+        if company:
+            company_record = CompanyService(session).get_company_by_name(company)
+            if not company_record:
+                console.print(f"[red]Error:[/red] Company '{company}' not found")
+                raise typer.Exit(1)
 
-        contact = ContactService(session).add_contact(
+        contact_svc = ContactService(session)
+        contact = contact_svc.add_contact(
             ContactCreate(
-                company_id=company_record.id,
                 name=name,
                 title=title,
                 email=email,
@@ -48,6 +51,11 @@ def main(
             )
         )
 
+        if company_record and contact.id:
+            contact_svc.associate_with_company(contact.id, company_record.id)
+        if role_id and contact.id:
+            contact_svc.associate_with_role(contact.id, role_id)
+
     if as_json:
         print(json.dumps(contact.model_dump(), default=str))
         return
@@ -55,7 +63,10 @@ def main(
     table = Table(show_header=False, box=None, padding=(0, 2))
     table.add_row("[bold]ID[/bold]", str(contact.id))
     table.add_row("[bold]Name[/bold]", contact.name)
-    table.add_row("[bold]Company[/bold]", company)
+    if company_record:
+        table.add_row("[bold]Company[/bold]", company)
+    if role_id:
+        table.add_row("[bold]Role ID[/bold]", str(role_id))
     if contact.title:
         table.add_row("[bold]Title[/bold]", contact.title)
     if contact.email:

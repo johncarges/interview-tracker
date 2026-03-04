@@ -15,6 +15,19 @@ class CompanyService:
         company = self.repo.create(data)
         return CompanyRead.model_validate(company, from_attributes=True)
 
+    def get_or_create(
+        self,
+        name: str,
+        website: str | None = None,
+        industry: str | None = None,
+    ) -> tuple[CompanyRead, bool]:
+        """Return (company, created). Creates with provided metadata only if new."""
+        existing = self.repo.get_by_name(name)
+        if existing:
+            return CompanyRead.model_validate(existing, from_attributes=True), False
+        company = self.repo.create(CompanyCreate(name=name, website=website, industry=industry))
+        return CompanyRead.model_validate(company, from_attributes=True), True
+
     def get_company_by_name(self, name: str) -> CompanyRead | None:
         company = self.repo.get_by_name(name)
         return CompanyRead.model_validate(company, from_attributes=True) if company else None

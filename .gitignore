@@ -18,6 +18,9 @@ data/*.db
 data/*.db-shm
 data/*.db-wal
 
+# Tailored resumes (personal data, not committed)
+resumes/
+
 # Type checking
 .pyright/
 

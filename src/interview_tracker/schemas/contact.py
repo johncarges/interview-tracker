@@ -4,7 +4,6 @@ from pydantic import BaseModel
 
 
 class ContactCreate(BaseModel):
-    company_id: int
     name: str
     title: str | None = None
     email: str | None = None
@@ -15,7 +14,6 @@ class ContactCreate(BaseModel):
 
 class ContactRead(BaseModel):
     id: int
-    company_id: int
     name: str
     title: str | None
     email: str | None

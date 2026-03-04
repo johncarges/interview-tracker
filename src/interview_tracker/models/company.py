@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 
 from sqlmodel import Field, Relationship, SQLModel
 
+from interview_tracker.models.contact import ContactCompany
+
 if TYPE_CHECKING:
     from interview_tracker.models.contact import Contact
     from interview_tracker.models.role import Role
@@ -19,4 +21,6 @@ class Company(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     roles: list["Role"] = Relationship(back_populates="company")
-    contacts: list["Contact"] = Relationship(back_populates="company")
+    contacts: list["Contact"] = Relationship(
+        back_populates="companies", link_model=ContactCompany
+    )
