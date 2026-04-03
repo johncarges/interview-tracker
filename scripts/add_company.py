@@ -10,7 +10,6 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from interview_tracker.database.session import get_session
 from interview_tracker.schemas.company import CompanyCreate
 from interview_tracker.services.company_service import CompanyService
 
@@ -27,17 +26,13 @@ def main(
     notes: str = typer.Option(None, help="Free-form notes"),
     as_json: bool = typer.Option(False, "--json", help="Output as JSON"),
 ) -> None:
-    with get_session() as session:
-        service = CompanyService(session)
-        try:
-            company = service.add_company(
-                CompanyCreate(
-                    name=name, website=website, industry=industry, status=status, notes=notes
-                )
-            )
-        except ValueError as e:
-            console.print(f"[red]Error:[/red] {e}")
-            raise typer.Exit(1)
+    try:
+        company = CompanyService().add_company(
+            CompanyCreate(name=name, website=website, industry=industry, status=status, notes=notes)
+        )
+    except ValueError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(1)
 
     if as_json:
         print(json.dumps(company.model_dump(), default=str))

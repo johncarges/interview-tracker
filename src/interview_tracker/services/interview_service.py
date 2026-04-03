@@ -1,51 +1,60 @@
+from contextlib import nullcontext
+
 from sqlmodel import Session
 
+from interview_tracker.database.session import get_session
 from interview_tracker.repositories.application import ApplicationRepository
 from interview_tracker.repositories.interview import InterviewRepository
 from interview_tracker.schemas.interview import InterviewCreate, InterviewRead, InterviewUpdate
 
-ACTIVE_STATUSES = {"applied", "screening", "interviewing"}
-
 
 class InterviewService:
-    def __init__(self, session: Session) -> None:
-        self.repo = InterviewRepository(session)
-        self.app_repo = ApplicationRepository(session)
+    def __init__(self, session: Session | None = None) -> None:
+        self._session = session
+
+    def _get_session(self):
+        # If a session was injected (e.g. in tests), wrap it in a no-op context manager
+        # so the caller retains ownership and we don't close it. Otherwise create our own.
+        return nullcontext(self._session) if self._session else get_session()
 
     def schedule_interview(self, data: InterviewCreate) -> InterviewRead:
-        application = self.app_repo.get_by_id(data.application_id)
-        if not application:
-            raise ValueError(f"Application id={data.application_id} not found")
-        interview = self.repo.create(data)
-        return InterviewRead.model_validate(interview, from_attributes=True)
+        with self._get_session() as session:
+            application = ApplicationRepository(session).get_by_id(data.application_id)
+            if not application:
+                raise ValueError(f"Application id={data.application_id} not found")
+            interview = InterviewRepository(session).create(data)
+            return InterviewRead.model_validate(interview, from_attributes=True)
 
     def upcoming_interviews(self, days_ahead: int = 14) -> list[InterviewRead]:
-        interviews = self.repo.list_upcoming(days_ahead)
-        return [InterviewRead.model_validate(i, from_attributes=True) for i in interviews]
+        with self._get_session() as session:
+            interviews = InterviewRepository(session).list_upcoming(days_ahead)
+            return [InterviewRead.model_validate(i, from_attributes=True) for i in interviews]
 
     def complete_interview(
         self, interview_id: int, outcome: str, notes: str | None = None
     ) -> InterviewRead:
         from datetime import UTC, datetime
 
-        interview = self.repo.get_by_id(interview_id)
-        if not interview:
-            raise ValueError(f"Interview id={interview_id} not found")
+        with self._get_session() as session:
+            interview = InterviewRepository(session).get_by_id(interview_id)
+            if not interview:
+                raise ValueError(f"Interview id={interview_id} not found")
 
-        updated = self.repo.update(
-            interview,
-            InterviewUpdate(outcome=outcome, completed_at=datetime.now(UTC), notes=notes),
-        )
+            updated = InterviewRepository(session).update(
+                interview,
+                InterviewUpdate(outcome=outcome, completed_at=datetime.now(UTC), notes=notes),
+            )
 
-        # Bump application to "interviewing" if outcome passed and status is still early-stage
-        if outcome == "passed":
-            application = self.app_repo.get_by_id(interview.application_id)
-            if application and application.status in {"applied", "screening"}:
-                from interview_tracker.schemas.application import ApplicationUpdate
-                self.app_repo.update(application, ApplicationUpdate(status="interviewing"))
+            # Bump application to "interviewing" if outcome passed and status is still early-stage
+            if outcome == "passed":
+                application = ApplicationRepository(session).get_by_id(interview.application_id)
+                if application and application.status in {"applied", "screening"}:
+                    from interview_tracker.schemas.application import ApplicationUpdate
+                    ApplicationRepository(session).update(application, ApplicationUpdate(status="interviewing"))
 
-        return InterviewRead.model_validate(updated, from_attributes=True)
+            return InterviewRead.model_validate(updated, from_attributes=True)
 
     def get_interview(self, id: int) -> InterviewRead | None:
-        interview = self.repo.get_by_id(id)
-        return InterviewRead.model_validate(interview, from_attributes=True) if interview else None
+        with self._get_session() as session:
+            interview = InterviewRepository(session).get_by_id(id)
+            return InterviewRead.model_validate(interview, from_attributes=True) if interview else None

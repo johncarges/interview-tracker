@@ -10,7 +10,6 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from interview_tracker.database.session import get_session
 from interview_tracker.services.application_service import ApplicationService
 
 ORDERED_STATUSES = ["applied", "screening", "interviewing", "offer", "rejected", "withdrawn"]
@@ -32,8 +31,7 @@ console = Console()
 def main(
     as_json: bool = typer.Option(False, "--json", help="Output as JSON"),
 ) -> None:
-    with get_session() as session:
-        summary = ApplicationService(session).pipeline_summary()
+    summary = ApplicationService().pipeline_summary()
 
     if as_json:
         print(json.dumps(summary))

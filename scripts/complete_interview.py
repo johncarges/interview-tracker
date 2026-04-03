@@ -9,7 +9,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 import typer
 from rich.console import Console
 
-from interview_tracker.database.session import get_session
 from interview_tracker.services.interview_service import InterviewService
 
 VALID_OUTCOMES = ["passed", "failed", "pending"]
@@ -30,12 +29,11 @@ def main(
         console.print(f"[red]Error:[/red] Invalid outcome. Choose from: {valid}")
         raise typer.Exit(1)
 
-    with get_session() as session:
-        try:
-            interview = InterviewService(session).complete_interview(interview_id, outcome, notes)
-        except ValueError as e:
-            console.print(f"[red]Error:[/red] {e}")
-            raise typer.Exit(1)
+    try:
+        interview = InterviewService().complete_interview(interview_id, outcome, notes)
+    except ValueError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(1)
 
     if as_json:
         print(json.dumps(interview.model_dump(), default=str))

@@ -10,7 +10,6 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from interview_tracker.database.session import get_session
 from interview_tracker.services.application_service import ApplicationService
 
 STATUS_COLORS = {
@@ -32,14 +31,13 @@ def main(
     role: str = typer.Option(None, help="Filter by role title (partial match)"),
     as_json: bool = typer.Option(False, "--json", help="Output as JSON"),
 ) -> None:
-    with get_session() as session:
-        try:
-            applications = ApplicationService(session).get_application_status_full(
-                company_name=company, role_title=role
-            )
-        except ValueError as e:
-            console.print(f"[red]Error:[/red] {e}")
-            raise typer.Exit(1)
+    try:
+        applications = ApplicationService().get_application_status_full(
+            company_name=company, role_title=role
+        )
+    except ValueError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(1)
 
     if as_json:
         print(json.dumps([a.model_dump() for a in applications], default=str))

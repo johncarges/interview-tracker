@@ -9,7 +9,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 import typer
 from rich.console import Console
 
-from interview_tracker.database.session import get_session
 from interview_tracker.services.application_service import ApplicationService
 
 VALID_STATUSES = ["applied", "screening", "interviewing", "offer", "rejected", "withdrawn"]
@@ -28,12 +27,11 @@ def main(
         console.print(f"[red]Error:[/red] Invalid status. Choose from: {', '.join(VALID_STATUSES)}")
         raise typer.Exit(1)
 
-    with get_session() as session:
-        try:
-            application = ApplicationService(session).update_status(application_id, status)
-        except ValueError as e:
-            console.print(f"[red]Error:[/red] {e}")
-            raise typer.Exit(1)
+    try:
+        application = ApplicationService().update_status(application_id, status)
+    except ValueError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(1)
 
     if as_json:
         print(json.dumps(application.model_dump(), default=str))

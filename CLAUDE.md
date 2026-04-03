@@ -131,7 +131,8 @@ The master has a `\iffullstack` toggle — comment out `\fullstacktrue` for back
    - Frontend mentions (React, TypeScript, UI) → full-stack
    - Pure backend/infra (Kubernetes, distributed systems, payments) → backend
 4. Write a tailored copy to `resumes/` with the toggle set and any technology reordering
-5. Note which variant was used in the role's notes if non-obvious
+5. Compile to PDF: `pdflatex -interaction=nonstopmode -output-directory resumes/<company> resumes/<company>/Carges_<Company>_Resume.tex`
+6. Note which variant was used in the role's notes if non-obvious
 
 ---
 

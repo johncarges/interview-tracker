@@ -10,7 +10,6 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from interview_tracker.database.session import get_session
 from interview_tracker.schemas.contact import ContactCreate
 from interview_tracker.services.company_service import CompanyService
 from interview_tracker.services.contact_service import ContactService
@@ -31,30 +30,29 @@ def main(
     notes: str = typer.Option(None, help="Free-form notes"),
     as_json: bool = typer.Option(False, "--json", help="Output as JSON"),
 ) -> None:
-    with get_session() as session:
-        company_record = None
-        if company:
-            company_record = CompanyService(session).get_company_by_name(company)
-            if not company_record:
-                console.print(f"[red]Error:[/red] Company '{company}' not found")
-                raise typer.Exit(1)
+    company_record = None
+    if company:
+        company_record = CompanyService().get_company_by_name(company)
+        if not company_record:
+            console.print(f"[red]Error:[/red] Company '{company}' not found")
+            raise typer.Exit(1)
 
-        contact_svc = ContactService(session)
-        contact = contact_svc.add_contact(
-            ContactCreate(
-                name=name,
-                title=title,
-                email=email,
-                phone=phone,
-                linkedin_url=linkedin,
-                notes=notes,
-            )
+    contact_svc = ContactService()
+    contact = contact_svc.add_contact(
+        ContactCreate(
+            name=name,
+            title=title,
+            email=email,
+            phone=phone,
+            linkedin_url=linkedin,
+            notes=notes,
         )
+    )
 
-        if company_record and contact.id:
-            contact_svc.associate_with_company(contact.id, company_record.id)
-        if role_id and contact.id:
-            contact_svc.associate_with_role(contact.id, role_id)
+    if company_record and contact.id:
+        contact_svc.associate_with_company(contact.id, company_record.id)
+    if role_id and contact.id:
+        contact_svc.associate_with_role(contact.id, role_id)
 
     if as_json:
         print(json.dumps(contact.model_dump(), default=str))

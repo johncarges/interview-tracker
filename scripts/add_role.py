@@ -10,7 +10,6 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from interview_tracker.database.session import get_session
 from interview_tracker.schemas.application import ApplicationCreate
 from interview_tracker.schemas.role import RoleCreate
 from interview_tracker.services.application_service import ApplicationService
@@ -37,30 +36,29 @@ def main(
     apply: bool = typer.Option(False, "--apply", help="Also record an application"),
     as_json: bool = typer.Option(False, "--json", help="Output as JSON"),
 ) -> None:
-    with get_session() as session:
-        company_record, company_created = CompanyService(session).get_or_create(
-            name=company, website=website, industry=industry
-        )
+    company_record, company_created = CompanyService().get_or_create(
+        name=company, website=website, industry=industry
+    )
 
-        role = RoleService(session).add_role(
-            RoleCreate(
-                company_id=company_record.id,
-                title=title,
-                url=url,
-                description=description,
-                salary_min=salary_min,
-                salary_max=salary_max,
-                office_days_per_week=office_days,
-                min_experience_years=min_experience,
-                notes=notes,
-            )
+    role = RoleService().add_role(
+        RoleCreate(
+            company_id=company_record.id,
+            title=title,
+            url=url,
+            description=description,
+            salary_min=salary_min,
+            salary_max=salary_max,
+            office_days_per_week=office_days,
+            min_experience_years=min_experience,
+            notes=notes,
         )
+    )
 
-        application = None
-        if apply:
-            application = ApplicationService(session).add_application(
-                ApplicationCreate(role_id=role.id)
-            )
+    application = None
+    if apply:
+        application = ApplicationService().add_application(
+            ApplicationCreate(role_id=role.id)
+        )
 
     if as_json:
         out = {"role": role.model_dump(mode="json"), "company_created": company_created}

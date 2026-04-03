@@ -10,7 +10,6 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from interview_tracker.database.session import get_session
 from interview_tracker.services.interview_service import InterviewService
 
 app = typer.Typer()
@@ -22,8 +21,7 @@ def main(
     days: int = typer.Option(14, help="How many days ahead to look"),
     as_json: bool = typer.Option(False, "--json", help="Output as JSON"),
 ) -> None:
-    with get_session() as session:
-        interviews = InterviewService(session).upcoming_interviews(days_ahead=days)
+    interviews = InterviewService().upcoming_interviews(days_ahead=days)
 
     if as_json:
         print(json.dumps([i.model_dump() for i in interviews], default=str))
