@@ -2,6 +2,7 @@
 
 from mcp.server.fastmcp import FastMCP
 
+from interview_tracker.database.engine import init_db
 from interview_tracker.schemas.application import ApplicationCreate
 from interview_tracker.schemas.company import CompanyCreate
 from interview_tracker.schemas.contact import ContactCreate
@@ -12,6 +13,8 @@ from interview_tracker.services.company_service import CompanyService
 from interview_tracker.services.contact_service import ContactService
 from interview_tracker.services.interview_service import InterviewService
 from interview_tracker.services.role_service import RoleService
+
+init_db()
 
 mcp = FastMCP("Interview Tracker")
 

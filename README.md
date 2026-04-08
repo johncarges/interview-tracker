@@ -1,59 +1,67 @@
 # Interview Tracker
 
-A local-first job search tracker designed to be used natively with Claude Code. Instead of a
-web UI, you describe what you want in natural language and Claude either runs a convenience
-script or writes a short Python snippet against the local SQLite database.
+A local-first job search tracker with an MCP server for Claude Code. Describe what you want
+in natural language and Claude handles it — no commands needed. Data lives in a local SQLite
+file.
 
 ---
 
-## How It Works
+## MCP Setup
 
-There are two interaction modes:
-
-**Convenience scripts** handle mutations and common queries — operations with side effects,
-validation, or frequent enough to be worth a dedicated command:
+Requires [uv](https://docs.astral.sh/uv/). If you don't have it:
 
 ```bash
-uv run python scripts/add_company.py "Stripe" --industry fintech
-uv run python scripts/pipeline_summary.py
-uv run python scripts/upcoming_interviews.py
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-**Ad-hoc Python** handles everything else. For flexible or one-off questions, Claude writes
-a short snippet directly against the service and repository layer — no new script required:
-
-> *"Show me edtech companies I've saved but haven't applied to yet"*
-> *"Which of my active applications haven't had any interviews scheduled?"*
-> *"List all roles mentioning React that I applied to in the last 30 days"*
-
-`CLAUDE.md` is the operating manual for this interaction model — it's committed to the repo
-intentionally as part of the app, not personal config.
-
----
-
-## Setup
-
-Requires [uv](https://docs.astral.sh/uv/).
+Then clone and register the MCP:
 
 ```bash
 git clone https://github.com/johncarges/interview-tracker
 cd interview-tracker
-uv sync --extra dev
-cp .env.example .env
+claude mcp add interview-tracker -- uv --directory "$(pwd)" run mcp_server/server.py
+```
+
+The database is created automatically on first run. Once connected, just talk to Claude:
+
+> *"Add a role at Google for Backend Engineer and mark me as applied"*
+> *"What's my pipeline looking like?"*
+> *"Are there any interviews coming up this week?"*
+> *"Update my Meta application to screening"*
+
+---
+
+## Script Usage
+
+If you want to use the CLI scripts directly without the MCP:
+
+```bash
+git clone https://github.com/johncarges/interview-tracker
+cd interview-tracker
+uv sync
 uv run python scripts/init_db.py
+```
+
+Then run scripts directly:
+
+```bash
+uv run python scripts/pipeline_summary.py
+uv run python scripts/upcoming_interviews.py --days 7
+uv run python scripts/add_company.py "Acme Corp" --industry fintech
 ```
 
 ---
 
 ## Architecture
 
-The app has two intentionally simple components:
+- **MCP server** (`mcp_server/`): exposes tools Claude calls directly
+- **Scripts** (`scripts/`): thin CLI wrappers around the same service layer
+- **Service layer** (`src/`): all business logic, repositories, and database access
+- **Storage**: SQLite, a single local file at `data/interview_tracker.db`
 
-- **Client**: Claude Code — runs scripts or writes ad-hoc Python directly
-- **Storage**: SQLite, a single local file configured via `DATABASE_URL` in `.env`
+The storage and client layers are decoupled — `DATABASE_URL` in `.env` can be pointed at
+Postgres without changing anything else, and a future FastAPI layer would just call the same
+services used today.
 
-Both are designed to be swapped out independently as needs grow:
-
-- **Scaling storage**: change `DATABASE_URL` to a Postgres connection string — nothing else changes
-- **Scaling the client**: the service layer is already decoupled from the CLI, so adding a
-  FastAPI layer means writing route handlers that call the same services used today
+`CLAUDE.md` is the operating manual for Claude — committed to the repo intentionally as part
+of the app, not personal config.

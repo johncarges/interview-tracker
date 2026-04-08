@@ -30,9 +30,6 @@ api = [
     "uvicorn[standard]>=0.32",
 ]
 
-[project.scripts]
-interview-tracker-mcp = "interview_tracker.mcp_server:main"
-
 [tool.hatch.build.targets.wheel]
 packages = ["src/interview_tracker"]
 
