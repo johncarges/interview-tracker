@@ -23,6 +23,9 @@ class InterviewRead(BaseModel):
 
 
 class InterviewUpdate(BaseModel):
+    type: str | None = None
+    scheduled_at: datetime | None = None
+    interviewer_id: int | None = None
     outcome: str | None = None
     completed_at: datetime | None = None
     notes: str | None = None

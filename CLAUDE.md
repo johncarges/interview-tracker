@@ -136,6 +136,25 @@ The master has a `\iffullstack` toggle — comment out `\fullstacktrue` for back
 
 ---
 
+## Gmail Scan Workflow
+
+When asked to check emails, scan for updates, or sync application statuses:
+
+1. Read `memory/project_gmail_scan.md` (in the session memory directory) to get the last scan date
+2. Search Gmail with: `label:job-hunt after:<last_scan_date>`
+3. For each thread, determine the relevant company and action:
+   - Interview invite / scheduling → add interview record, advance status to `interviewing`
+   - Rejection → update status to `rejected`
+   - Assessment / take-home → update status to `screening` or `interviewing` as appropriate
+   - Offer → update status to `offer`
+   - New company not yet tracked → add company + role + application first, then update status
+4. **Always update the watermark when done**: update `last scanned` date and the query string in `memory/project_gmail_scan.md`, and update the pointer line in `memory/MEMORY.md`
+
+The memory directory is at:
+`/Users/johncarges/.claude/projects/-Users-johncarges-Development-code-job-hunt-projects-2026-interview-tracker/memory/`
+
+---
+
 ## Changing the Database
 
 Set `DATABASE_URL` in `.env`. Nothing else changes.

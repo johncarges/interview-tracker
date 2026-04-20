@@ -54,6 +54,31 @@ class InterviewService:
 
             return InterviewRead.model_validate(updated, from_attributes=True)
 
+    def update_interview(
+        self,
+        interview_id: int,
+        interview_type: str | None = None,
+        scheduled_at: str | None = None,
+        contact_id: int | None = None,
+        notes: str | None = None,
+    ) -> InterviewRead:
+        from datetime import datetime
+        with self._get_session() as session:
+            interview = InterviewRepository(session).get_by_id(interview_id)
+            if not interview:
+                raise ValueError(f"Interview id={interview_id} not found")
+            update_data: dict = {}
+            if interview_type is not None:
+                update_data["type"] = interview_type
+            if scheduled_at is not None:
+                update_data["scheduled_at"] = datetime.fromisoformat(scheduled_at)
+            if contact_id is not None:
+                update_data["interviewer_id"] = contact_id
+            if notes is not None:
+                update_data["notes"] = notes
+            updated = InterviewRepository(session).update(interview, InterviewUpdate(**update_data))
+            return InterviewRead.model_validate(updated, from_attributes=True)
+
     def get_interview(self, id: int) -> InterviewRead | None:
         with self._get_session() as session:
             interview = InterviewRepository(session).get_by_id(id)

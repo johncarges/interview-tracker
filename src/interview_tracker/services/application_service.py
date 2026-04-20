@@ -99,6 +99,18 @@ class ApplicationService:
             company_name=company.name if company else "Unknown",
         )
 
+    def get_application_full(self, application_id: int) -> ApplicationReadFull | None:
+        with self._get_session() as session:
+            return self._to_full(application_id, session)
+
+    def update_notes(self, application_id: int, notes: str) -> ApplicationRead:
+        with self._get_session() as session:
+            application = ApplicationRepository(session).get_by_id(application_id)
+            if not application:
+                raise ValueError(f"Application id={application_id} not found")
+            updated = ApplicationRepository(session).update(application, ApplicationUpdate(notes=notes))
+            return ApplicationRead.model_validate(updated, from_attributes=True)
+
     def get_application_status_full(
         self,
         company_name: str | None = None,

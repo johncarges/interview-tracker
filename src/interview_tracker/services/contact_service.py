@@ -53,6 +53,31 @@ class ContactService:
             contacts = ContactRepository(session).list_by_role(role_id)
             return [ContactRead.model_validate(c, from_attributes=True) for c in contacts]
 
+    def list_all(self) -> list[ContactRead]:
+        with self._get_session() as session:
+            contacts = ContactRepository(session).list_all()
+            return [ContactRead.model_validate(c, from_attributes=True) for c in contacts]
+
+    def update_contact(
+        self,
+        contact_id: int,
+        name: str | None = None,
+        title: str | None = None,
+        email: str | None = None,
+        phone: str | None = None,
+        linkedin: str | None = None,
+        notes: str | None = None,
+    ) -> ContactRead:
+        with self._get_session() as session:
+            contact = ContactRepository(session).get_by_id(contact_id)
+            if not contact:
+                raise ValueError(f"Contact id={contact_id} not found")
+            updated = ContactRepository(session).update(
+                contact,
+                ContactUpdate(name=name, title=title, email=email, phone=phone, linkedin_url=linkedin, notes=notes),
+            )
+            return ContactRead.model_validate(updated, from_attributes=True)
+
     def contacts_needing_followup(self, days: int = 14) -> list[ContactRead]:
         with self._get_session() as session:
             contacts = ContactRepository(session).list_needing_followup(days)
