@@ -73,6 +73,3 @@ uv run python scripts/add_company.py "Acme Corp" --industry fintech
 The storage and client layers are decoupled — `DATABASE_URL` in `.env` can be pointed at
 Postgres without changing anything else, and a future FastAPI layer would just call the same
 services used today.
-
-`CLAUDE.md` is the operating manual for Claude — committed to the repo intentionally as part
-of the app, not personal config.

@@ -38,3 +38,6 @@ htmlcov/
 # IDE
 .idea/
 .vscode/
+
+# Personal Claude guidance
+CLAUDE.md
