@@ -8,20 +8,31 @@ file.
 
 ## MCP Setup
 
-Requires [uv](https://docs.astral.sh/uv/). If you don't have it:
+Requires [Claude Code](https://claude.ai/code) and [uv](https://docs.astral.sh/uv/).
+
+Install uv if you don't have it:
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-Then clone and register the MCP:
+Open Terminal (on Mac: press `Cmd+Space`, type "Terminal", press Enter), then run:
 
 ```bash
+# 1. Get the code (skip if you already have the folder)
 git clone https://github.com/johncarges/interview-tracker
+
+# 2. Navigate into the folder
 cd interview-tracker
-claude mcp add interview-tracker -- uv --directory "$(pwd)" run mcp_server/server.py
+
+# 3. Register the MCP
+claude mcp add -s user interview-tracker -- uv --directory "$(pwd)" run mcp_server/server.py
 ```
 
+> **Tip:** If you downloaded a zip instead of cloning, drag the unpacked folder into the Terminal
+> window after step 1 to paste its path, then press Enter to navigate into it.
+
+The `-s user` flag registers the MCP globally — you can use Claude from any directory after this.
 The database is created automatically on first run. Once connected, just talk to Claude:
 
 > *"Add a role at Google for Backend Engineer and mark me as applied"*

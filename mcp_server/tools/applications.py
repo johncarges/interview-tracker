@@ -31,6 +31,7 @@ def register(mcp):
             return "No applications found."
         lines = [
             f"#{a.id} {a.company_name} — {a.role_title} | status={a.status} | applied={a.applied_at.strftime('%Y-%m-%d')}"  # noqa: E501
+            + (f" | notes={a.notes}" if a.notes else "")
             for a in applications
         ]
         return "\n".join(lines)

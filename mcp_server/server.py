@@ -15,7 +15,15 @@ from interview_tracker.database.engine import init_db
 
 init_db()
 
-mcp = FastMCP("Interview Tracker")
+mcp = FastMCP(
+    "Interview Tracker",
+    instructions=(
+        "Use these MCP tools for all interview tracker operations — queries, mutations, and "
+        "status updates. Do not fall back to running Bash scripts or ad-hoc Python unless a "
+        "tool explicitly does not exist for the operation. Always load a tool's schema via "
+        "ToolSearch before calling it for the first time in a session."
+    ),
+)
 
 register_applications(mcp)
 register_interviews(mcp)
